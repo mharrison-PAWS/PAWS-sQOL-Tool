@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>PAWS - Shelter Quality of Life Tool</title>
+
+<style>
+body {
+  font-family: Calibri, Arial;
+  margin:0;
+  background:#f5f5f5;
+}
+
+.container {
+  max-width:100%;
+  margin:0 0.25in 0.5in 0.25in;   /* ← adds ½" bottom space */
+}
+
+/* ===== HEADER ===== */
+
+.header {
+  background:#00334D;
+  color:white;
+  display:flex;
+  align-items:center;
+  padding:20px;
+  position:relative;
+  min-height:135px;   /* ↓ reduced from 140 */
+}
+
+
+.sub-label {
+  font-size:11px;
+  font-weight:normal;
+  display:block;
+  margin-top:2px;
+}
+
+.header-title {
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  text-align:center;
+  font-size:28px;
+  font-family: "Times New Roman", Times, serif;
+  width:65%;
+}
+
+.header-subtitle {
+  font-size:0.85em;   /* ~2pt smaller relative to parent */
+}
+
+.logo img {
+  height:75px;            /* adjust as needed */
+  width:auto;
+}
+
+.logo {
+  display:flex;
+  align-items:center;
+  height:100%;
+  width:160px;            /* sane fixed width */
+  padding-left:0.25in;    /* EXACT requested shift */
+}
+
+/* ==== NAME AND ID INPUT ====*/
+.header-right {
+  position:absolute;
+  right:20px;
+  top:50%;
+  transform:translateY(-50%);
+  width:165px;
+}
+
+.header-right input {
+  width:100%;
+  margin-bottom:4px;
+  font-size:12px;             /* slightly tighter */
+  padding:2px 4px;
+  border:1px solid #ccc;
+}
+
+.header-logo {
+  position:absolute;
+  top:10px;
+  right:200px;   /* keeps clear of input fields */
+}
+
+.header-logo img {
+  height:40px;
+  width:auto;
+}
+
+
+/* ===== PRINT BUTTON STYLE ===== */
+
+.button-row {
+  position:absolute;
+
+  bottom:8px;
+  left:50%;
+  transform:translateX(-50%);
+
+  display:flex;
+  gap:10px;
+}
+
+.button-row button {
+  padding:2px 10px;              /* ↓ reduced vertical padding */
+  cursor:pointer;
+  border:1px solid #666;         /* subtle edge */
+  background:#d9d9d9;            /* grey fill */
+  color:#000;                    /* black text for contrast */
+  border-radius:5px;
+}
+
+.button-row button:hover {
+  background:#bfbfbf;
+}
+
+/* ===== INSTRUCTIONS ===== */
+
+.instructions {
+  background:#d9d9d9;
+  border:2px solid black;
+  border-top:none;
+  padding:10px;
+  font-size:12px;
+  font-style:italic;
+  text-align:center;
+}
+
+/* ===== TABLE ===== */
+
+table {
+  border-collapse:collapse;
+  width:100%;
+  table-layout:fixed;
+}
+
+#grid {
+  border:3px solid black;   /* ← adds bold outer frame */
+}
+
+#grid tr:first-child th {
+  border-bottom:2px solid black;
+}
+
+th, td {
+  border:1px solid black;
+  padding:4px 6px;
+  font-size:12px;
+  vertical-align:middle;
+  line-height:1.2;
+}
+
+th {
+  background:#2f5d8a;
+  color:white;
+  text-align:center;
+  height:32px;
+}
+
+/* ===== COLUMN 1 ROW TITLES ===== */
+
+.dimension {
+  background:#DBE5F1;
+  font-weight:bold;
+  text-decoration: underline;
+  text-align:center;
+}
+
+/* ===== CLICKABLE CELLS ===== */
+
+.score-cell {
+  text-align:center;
+  cursor:pointer;
+}
+
+/* ===== SCORE COLORS ===== */
+
+.score-0 { background:#000000; color:#FFFFFF; }
+.score-1 { background:#9C0006; color:#FFFFFF; }
+.score-2 { background:#FFF2CC; color:#000000; }
+.score-3 { background:#C6EFCE; color:#006100; }
+.score-4 { background:#00B050; color:#FFFFFF; }
+
+/* ===== SCORE OUTPUT COLUMN ===== */
+
+.score-output {
+  text-align:center;
+  font-weight:bold;
+}
+
+/* ===== PANELS (CLEAN SYSTEM) ===== */
+
+.panel-wrap {
+  display:flex;
+  gap:5px;
+  margin-top:20px;
+
+  align-items:stretch;   /* 🔑 THIS enforces equal height */
+}
+
+.panel {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  border:3px solid black;
+
+  min-height:0;   /* 🔑 prevents overflow-based height divergence */
+}
+
+/* ONLY tables stretch fully */
+.panel > table {
+  flex:1;
+  height:100%;
+}
+
+/* QOL panel structure */
+.qol-panel {
+  display:flex;
+  flex-direction:column;
+  flex:1;
+}
+
+/* header stays fixed */
+.qol-header {
+  flex:0 0 32px;   /* 🔑 hard lock height */
+}
+
+/* content expands */
+.qol-box {
+  flex:1;
+}
+
+/* remove ALL table borders inside panels */
+.panel table {
+  border:none;
+}
+
+.panel > table {
+  height:100%;
+}
+
+/* prevent phantom lines */
+.panel table,
+.panel td,
+.panel th {
+  border-width:1px;
+}
+
+.panel > *:first-child {
+  border-top:none;
+}
+
+/* ensure equal height */
+.panel-wrap > .panel {
+  align-self:stretch;
+}
+
+.qol-header {
+  background:#2F5D8A;
+  color:white;
+  text-align:center;
+  font-weight:bold;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  padding:4px 6px;     /* SAME as th */
+  line-height:1.2;
+
+  border-bottom:1px solid black;
+}
+
+
+.qol-panel {
+  display:flex;
+  flex-direction:column;
+  flex:1;
+  min-height:0;
+}
+
+.qol-box {
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:normal;
+  font-size:20px;
+  text-align:center;
+  padding:10px;
+}
+
+.value-cell {
+  font-size:16px;
+  font-weight:bold;
+  text-align:center;
+}
+
+/* ===== QOL BAND COLORS (FINAL) ===== */
+
+.band-green {
+  background:#00B050;
+  color:#FFFFFF;
+}
+
+.band-lightgreen {
+  background:#C6EFCE;
+  color:#006100;
+}
+
+.band-yellow {
+  background:#FFEB9C;
+  color:#000000;
+}
+
+.band-red {
+  background:#FFC7CE;
+  color:#9C0006;
+}
+
+.band-darkred {
+  background:#A00000;
+  color:#FFFFFF;
+}
+
+.band-black {
+  background:#000000;
+  color:#FFFFFF;
+  font-weight:normal;
+}
+
+/* Center first column in QOL band table */
+.panel:first-child td:first-child,
+.panel:first-child th:first-child {
+  text-align:center;
+}
+
+/* ===== HOSPICE HEADER ===== */
+
+.hospice-section {
+  margin-top:20px;
+}
+
+.hospice-title {
+  background:#00334D;
+  color:white;
+  text-align:center;
+  padding:6px 10px;
+  font-weight:bold;
+  font-size:16px;
+
+  border-top:3px solid black;
+  border-left:3px solid black;
+  border-right:3px solid black;
+  border-bottom:1px solid black;
+}
+
+.hospice-desc {
+  background:#d9d9d9;
+  padding:8px 12px;
+  text-align:center;
+  font-size:12px;
+  line-height:1.15;
+  font-style: italic;
+
+  border-left:3px solid black;
+  border-right:3px solid black;
+  border-bottom:3px solid black;
+  border-top:1px solid black;
+}
+
+/* ==== HOSPICE HEADER STYLING ==== */
+
+.hospice-section-header th {
+  background:#00334D;
+  color:white;
+  font-weight:bold;
+  text-align:center;
+  padding:4px 6px;
+  line-height:1.1;
+}
+
+.hospice-sub-header th {
+  background:#2f5d8a;
+  color:white;
+  font-weight:bold;
+  text-align:center;
+  text-decoration:underline;   /* ← add */
+  padding:4px 6px;             /* ← tighten */
+  line-height:1.1;             /* ← tighten */
+}
+
+/* ==== HOSPICE COLUMN SPECIFIC FORMATTING ==== */
+
+/* Meets Criteria column */
+.hospice-main td:nth-child(4) {
+  font-weight:bold;
+}
+
+
+/* ==== HOSPICE YES NO COLORS ==== */
+.hospice-yes {
+  background:#c6efce !important;
+  color:#006100;
+}
+
+.hospice-no {
+  background:#ffc7ce !important;
+  color:#9c0006;
+}
+
+.hospice-warning td {
+  background:#ffffff;
+  color:#9c0006;
+  font-weight:bold;
+  text-align:center;
+}
+
+
+/* Last row handling */
+.hospice-main tr:last-child td:first-child {
+  background:#FFFFFF;
+}
+
+/* Response box (right side) */
+.hospice-response {
+  background:#e6e6e6;
+  font-weight:bold;
+}
+
+
+/* ==== HOSPICE RIGHT TABLE SCORING BAND ==== */
+
+/* ===== HOSPICE BAND COLORS (MATCH QOL) ===== */
+
+.hospice-band .band-green {
+  background:#00B050;
+  color:#FFFFFF;
+}
+
+.hospice-band .band-yellow {
+  background:#FFEB9C;
+  color:#000000;
+}
+
+.hospice-band .band-darkred {
+  background:#A00000;
+  color:#FFFFFF;
+}
+
+.hospice-band {
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+
+
+.hospice-band th {
+  background:#00334D;
+  color:white;
+  font-weight:bold;
+  text-align:center;
+  padding:6px;
+}
+
+.hospice-band td {
+  border:1px solid black;   /* ← thin interior lines */
+  padding:6px;
+  font-size:12px;
+  text-align:center;
+}
+
+/* ===== HOSPICE TABLE BASE ===== */
+
+.hospice-main {
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+
+.hospice-main th,
+.hospice-main td {
+  border:1px solid black;   /* ← thin interior lines */
+  padding:6px;
+  font-size:12px;
+  text-align:center;
+  vertical-align:middle;
+}
+
+/* Left table background (Excel gray) */
+.hospice-main td {
+  background:#e6e6e6;
+}
+
+/* Column 1: WHITE */
+.hospice-main td:first-child {
+  background:#FFFFFF;
+}
+
+/* Column 2: GRAY (explicit, even though base already does it) */
+.hospice-main td:nth-child(2) {
+  background:#e6e6e6;
+}
+
+/* Column 3: LIGHT BLUE (Candidate Score) */
+.hospice-main td:nth-child(3) {
+  background:#DBE5F1;
+  font-weight:bold;
+}
+
+/* ===== HOSPICE GRID LAYOUT ===== */
+
+.hospice-grid {
+  display:flex;
+  gap:0px;
+  align-items:stretch;
+}
+
+.hospice-grid > * {
+  height:auto;
+}
+
+.hospice-main {
+  width:65%;
+}
+
+.hospice-right {
+  width:35%;
+  display:flex;
+  flex-direction:column;
+  gap:0;                /* ← remove spacing between boxes */
+  height:auto;
+  align-self:stretch;   /* ← CRITICAL: match left table height */
+}
+
+.hospice-right table {
+  width:100%;
+}
+
+/* ==== HOSPICE DETERMINATION PANEL ===*/
+
+.hospice-determination {
+  flex:1;                  /* fills remaining vertical space */
+  display:flex;
+  flex-direction:column;
+  margin-top:0;            /* ensure no gap */
+  /* border handled in outer frame section */
+}
+
+.hospice-det-header {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background:#00334D;
+  color:#ffffff;
+
+  font-weight:bold;
+  font-size:14px;
+
+  padding:6px 8px;
+
+  border-bottom:1px solid black;
+
+  text-align:center;
+}
+
+#hospice_final {
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  text-align:center;
+  font-size:20px;
+  font-weight:bold;
+
+  padding:10px;
+}
+.hospice-band {
+  margin-bottom:0;
+}
+
+.hospice-determination {
+  margin-top:0;
+}
+
+/* ===== OUTER FRAME CONTROL ===== */
+
+/* Left table keeps full border */
+.hospice-main {
+  border:3px solid black;
+}
+
+/* Right panel shares the border */
+.hospice-band {
+  border-top:3px solid black;
+  border-right:3px solid black;
+  border-bottom:3px solid black;
+  border-left:none;   /* ← CRITICAL */
+}
+
+/* Determination panel aligns with same rule */
+.hospice-determination {
+  border-top:3px solid black;
+  border-right:3px solid black;
+  border-bottom:3px solid black;
+  border-left:none;   /* ← CRITICAL */
+}
+
+/* Hidden during normal UI */
+.print-continuation {
+  display:none;
+}
+
+/* ===== AI INTERPRETATION ===== */
+
+.ai-section {
+  margin-top:20px;
+}
+
+.ai-title {
+
+  background:#00334D;
+  color:#FFFFFF;
+
+  text-align:center;
+  font-weight:bold;
+  font-size:16px;
+
+  padding:8px 10px;
+
+  border-top:3px solid black;
+  border-left:3px solid black;
+  border-right:3px solid black;
+  border-bottom:1px solid black;
+}
+
+.ai-box {
+
+  background:#FFFFFF;
+
+  border-left:3px solid black;
+  border-right:3px solid black;
+  border-bottom:3px solid black;
+
+  padding:14px;
+
+  min-height:180px;
+
+  font-size:13px;
+  line-height:1.35;
+}
+
+
+
+/* ===== PRINT MODE ===== */
+@media print {
+
+  /* Page setup */
+  @page {
+    size: portrait;
+    margin: 0.25in;
+  }
+
+  body {
+    background:white !important;
+  }
+
+  /* Hide UI elements */
+  button {
+    display:none;
+  }
+
+  input {
+    border:none;
+  }
+
+/* Prevent disappearing PDF gridlines */
+table {
+  border-collapse:separate !important;
+  border-spacing:0 !important;
+}
+
+#grid,
+.hospice-main,
+.hospice-band,
+.hospice-determination {
+  border-width:2px !important;
+}
+
+
+
+/* Explicit cell borders for PDF rendering */
+th,
+td {
+  border-right:1.4px solid #000 !important;
+  border-bottom:1.4px solid #000 !important;
+}
+
+table tr:first-child th {
+  border-top:1.4px solid #000 !important;
+}
+
+table tr td:first-child,
+table tr th:first-child {
+  border-left:1.4px solid #000 !important;
+}
+
+
+ /* Preserve UI colors in print/PDF */
+* {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  box-shadow:none !important;
+}
+
+/* Preserve branded headers in print */
+.header,
+.hospice-title,
+.hospice-det-header,
+.qol-header {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+/* Ensure readable text in dark print bands */
+.band-darkred,
+.band-black,
+.score-0,
+.score-1,
+.qol-header {
+  color:#FFFFFF !important;
+}
+
+  /* Layout expansion */
+.container {
+  width:auto !important;
+  max-width:none !important;
+  margin:0 0.15in 0 0.15in !important;
+}
+
+  table {
+    width:100% !important;
+    page-break-inside:avoid;
+  }
+
+  tr,
+td,
+th {
+  page-break-inside:avoid !important;
+  break-inside:avoid !important;
+}
+
+.panel-wrap,
+.hospice-section,
+.hospice-grid,
+.hospice-right,
+.hospice-main {
+  page-break-inside:avoid !important;
+  break-inside:avoid !important;
+}
+
+.page-break {
+  page-break-before:always;
+  break-before:page;
+}
+
+.header {
+  min-height:62px !important;
+  padding:8px 10px !important;
+}
+
+.header-title {
+  font-size:22px !important;
+}
+
+.logo img {
+  height:55px !important;
+}
+
+.instructions {
+  padding:6px !important;
+  font-size:10px !important;
+}
+
+/* ===== PAGE 2 CONTINUATION HEADER ===== */
+
+.print-continuation {
+  display:block !important;
+
+  Margin-bottom:0;
+
+  page-break-after:avoid !important;
+  break-after:avoid !important;
+}
+
+.print-cont-inner {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  background:#00334D;
+  color:#FFFFFF;
+
+  border:2px solid black;
+
+  padding:6px 10px;
+
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+.print-cont-logo img {
+  height:38px;
+}
+
+.print-cont-title {
+  text-align:center;
+
+  font-family:"Times New Roman", Times, serif;
+
+  font-size:18px;
+  font-weight:bold;
+  line-height:1.05;
+}
+
+.print-cont-right {
+  width:135px;
+
+  font-size:10px;
+  font-weight:bold;
+}
+
+.print-copy-field {
+  min-height:14px;
+
+  background:#FFFFFF;
+  color:#000000;
+
+  border:1px solid #999;
+
+  margin-top:2px;
+
+  padding:1px 4px;
+
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+
+  font-weight:normal;
+}
+
+.print-cont-sub {
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  height:14px;
+
+  margin:2px 0 0 0;
+
+  font-size:14px;
+  font-style:italic;
+
+  line-height:14px;
+
+  text-align:center;
+}
+
+.print-continuation {
+  page-break-inside:avoid !important;
+  break-inside:avoid !important;
+  page-break-after:avoid !important;
+}
+
+.panel-wrap {
+  page-break-inside:avoid !important;
+  break-inside:avoid !important;
+}
+
+  /* Typography tuning */
+th, td {
+  font-size:10px !important;
+  padding:3px !important;
+  line-height:1.15 !important;
+}
+
+  .qol-box {
+    font-size:16px !important;
+    border:2px solid black;
+  }
+
+  #hospice_final {
+    font-size:18px !important;
+    border:2px solid black;
+  }
+
+/* ===== PRINT HEADER OPTIMIZATION ===== */
+
+/* Logo area */
+.logo {
+  width:110px !important;
+  padding-left:0 !important;
+}
+
+.logo img {
+  height:52px !important;
+}
+
+/* Main title */
+.header-title {
+  font-size:23px !important;
+  line-height:1.1 !important;
+  width:60% !important;
+  padding-top:4px !important;
+}
+
+/* Subtitle */
+.header-subtitle {
+  font-size:0.72em !important;
+}
+
+/* Animal info box */
+.header-right {
+  width:155px !important;
+  right:18px !important;
+}
+
+.header-right input {
+  font-size:10px !important;
+  padding:1px 3px !important;
+  margin-bottom:2px !important;
+  height:16px !important;
+}
+
+/* Labels */
+.header-right {
+  font-size:11px !important;
+  line-height:1.0 !important;
+}
+
+/* Remove extra button spacing */
+.button-row {
+  display:none !important;
+}
+
+th,
+.hospice-section-header th,
+.hospice-sub-header th {
+  color:#FFFFFF !important;
+}
+
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+  <img src="Logo.jpg" alt="Logo">
+</div>
+
+  <div class="header-title">
+    PAWS - Shelter Quality of Life Tool<br>
+<span class="header-subtitle">[PAWS-sQOL]</span>
+  </div>
+
+  <div class="header-right">
+    ANIMAL NAME<br>
+<input id="animalNameInput">
+
+PAWS ID<br>
+<input id="animalIdInput">
+  </div>
+
+<!-- PRINT, PDF EXPORT, RESET BUTTONS -->
+
+<div class="button-row">
+      <button onclick="window.print()">Print</button>
+
+      <button onclick="exportPDF()">Export PDF</button>
+
+      <button onclick="resetAssessment()">Reset Assessment</button>
+    </div>
+</div>
+
+<!-- INSTRUCTIONS -->
+<div class="instructions">
+<u>INSTRUCTIONS:</u> Select a scoring cell for each Dimension by clicking that cell. Automated Quality of Life (QOL) scoring will begin once selection has been made for all Dimensions. 
+(*Note: Cell selection is reflected by color change. Cells may be changed or de-selected as needed. De-selection may require temporary selection of a different cell first.)
+</div>
+
+<!-- PRIMARY TABLE -->
+<table id="grid">
+<tr>
+  <th>Dimension</th>
+  <th>0</th><th>1</th><th>2</th><th>3</th><th>4</th>
+  <th>Score</th>
+</tr>
+
+<tr>
+<td class="dimension">P - Pain</td>
+<td class="score-cell" data-row="0" data-value="0">Pain or respiratory distress is unrelenting and causes continuous suffering that cannot be alleviated.</td>
+<td class="score-cell" data-row="0" data-value="1">Severe pain or respiratory distress persists despite appropriate medical intervention; animal shows frequent signs of distress or guarding.</td>
+<td class="score-cell" data-row="0" data-value="2">Pain or shortness of breath is evident and recurrent; treatment provides incomplete relief and discomfort impacts daily functioning.</td>
+<td class="score-cell" data-row="0" data-value="3">Mild pain or shortness of breath is present but adequately controlled with routine analgesia; animal remains comfortable most of the time.</td>
+<td class="score-cell" data-row="0" data-value="4">No observable signs of pain, shortness of breath or discomfort at rest or with normal movement.</td>
+<td id="score_0" class="score-output"></td>
+</tr>
+
+<tr>
+<td class="dimension">A - Appetite &amp; Hydration</td>
+<td class="score-cell" data-row="1" data-value="0">Unable or unwilling to eat or drink; severe dehydration or starvation is present and not reasonably reversible.</td>
+<td class="score-cell" data-row="1" data-value="1">Consumes very little despite appropriate intervention; weight loss or dehydration is present or worsening.</td>
+<td class="score-cell" data-row="1" data-value="2">Eats/drinks only with assistance, encouragement, special preparation, or environmental modification; hydration can be maintained with support.</td>
+<td class="score-cell" data-row="1" data-value="3">Shows a mild decrease in appetite or selectivity but continues to eat and drink independently and remains adequately hydrated.</td>
+<td class="score-cell" data-row="1" data-value="4">Eats and drinks voluntarily without assistance, maintains appropriate body condition, and shows no signs of dehydration.</td>
+<td id="score_1" class="score-output"></td>
+</tr>
+
+<tr>
+<td class="dimension">W - Welfare Environment</td>
+<td class="score-cell" data-row="2" data-value="0">Animal’s environment causes ongoing distress or physical harm that cannot be reasonably mitigated.</td>
+<td class="score-cell" data-row="2" data-value="1">Animal is rarely able to rest comfortably; environment frequently exacerbates distress or medical condition.</td>
+<td class="score-cell" data-row="2" data-value="2">Animal has frequent difficulty resting due to environmental stressors or physical discomfort.</td>
+<td class="score-cell" data-row="2" data-value="3">Animal experiences occasional or mild environmental discomfort but is generally able to rest and remain comfortable.</td>
+<td class="score-cell" data-row="2" data-value="4">Animal is housed in a manner that allows normal rest, thermoregulation, cleanliness, and physical comfort.</td>
+<td id="score_2" class="score-output"></td>
+</tr>
+
+<tr>
+<td class="dimension">S - Social Function &amp; Safety</td>
+<td class="score-cell" data-row="3" data-value="0">Animal presents an unacceptable danger to people or animals, or experiences complete social deprivation.</td>
+<td class="score-cell" data-row="3" data-value="1">Animal poses a significant safety risk or experiences profound social isolation, or whose condition requires ≥3 daily long-term medications to manage or control.</td>
+<td class="score-cell" data-row="3" data-value="2">Animal requires structured handling or controlled environments to interact safely, or whose condition requires up to 2 daily long-term medications to manage or control.</td>
+<td class="score-cell" data-row="3" data-value="3">Animal has manageable behavioral/social difficulties but remains safe with routine handling, or whose condition requires no more than 1 daily long-term medication to manage or control.</td>
+<td class="score-cell" data-row="3" data-value="4">Animal interacts appropriately and safely with people and/or animals.</td>
+<td id="score_3" class="score-output"></td>
+</tr>
+
+<tr>
+<td class="dimension">S - Species / Breed-Typical Behavior</td>
+<td class="score-cell" data-row="4" data-value="0">Animal is unable to express normal behaviors due to physical, psychological, or environmental constraints.</td>
+<td class="score-cell" data-row="4" data-value="1">Animal rarely displays normal species and/or breed-typical behaviors.</td><td class="score-cell" data-row="4" data-value="2">Animal expresses normal behaviors only briefly, infrequently, or with prompting.</td>
+<td class="score-cell" data-row="4" data-value="3">Animal shows mostly normal behavior with mild or occasional limitations.</td>
+<td class="score-cell" data-row="4" data-value="4">Animal regularly engages in species and/or breed-typical behaviors such as play, grooming, exploration, or social interaction.</td>
+<td id="score_4" class="score-output"></td>
+</tr>
+
+<tr>
+<td class="dimension">Q - Quality of Emotional State</td>
+<td class="score-cell" data-row="5" data-value="0">Animal experiences continuous psychological distress that results in ongoing suffering.</td>
+<td class="score-cell" data-row="5" data-value="1">Animal displays frequent panic, shutdown, depressive behavior, or extreme avoidance.</td>
+<td class="score-cell" data-row="5" data-value="2">Animal exhibits ongoing fear or anxiety that interferes with normal behavior or welfare.</td>
+<td class="score-cell" data-row="5" data-value="3">Animal shows mild anxiety or stress responses that are manageable and do not significantly impair daily functioning.</td>
+<td class="score-cell" data-row="5" data-value="4">Animal is calm, relaxed, or curious and recovers quickly from routine stressors.</td>
+<td id="score_5" class="score-output"></td>
+</tr>
+
+<tr>
+<td class="dimension">O - Overall Medical Status</td>
+<td class="score-cell" data-row="6" data-value="0">Animal has a terminal, catastrophic, or irreversible condition with no reasonable expectation of meaningful recovery.</td>
+<td class="score-cell" data-row="6" data-value="1">Animal has a serious progressive or life-limiting disease with poor or guarded prognosis despite treatment, or requires ≥4 daily long-term medications.</td>
+<td class="score-cell" data-row="6" data-value="2">Animal has a moderate or serious medical condition requiring ongoing management and monitoring, with uncertain or limited prognosis, or who requires up to 3 daily long-term medications.</td>
+<td class="score-cell" data-row="6" data-value="3">Animal has a mild or short-term illness or injury that is readily treatable with expected recovery, or who requires up to 2 daily long-term medications.</td>
+<td class="score-cell" data-row="6" data-value="4">Animal is medically healthy or has a stable chronic condition with good long-term management potential that requires no more than 1 daily long-term medication to manage or control.</td>
+<td id="score_6" class="score-output"></td>
+</tr>
+
+<tr>
+<td class="dimension">L - Locomotion &amp; Physical Function</td>
+<td class="score-cell" data-row="7" data-value="0">Animal is immobile with secondary complications such as soiling, pressure injuries, or distress.</td>
+<td class="score-cell" data-row="7" data-value="1">Animal is largely non-ambulatory and dependent on caregivers for most physical functions.</td>
+<td class="score-cell" data-row="7" data-value="2">Animal is ambulatory with difficulty or requires assistance for normal movement.</td>
+<td class="score-cell" data-row="7" data-value="3">Animal has minor mobility impairment but remains independently ambulatory.</td>
+<td class="score-cell" data-row="7" data-value="4">Animal moves normally for age and condition and can perform basic functions independently.</td>
+<td id="score_7" class="score-output"></td>
+</tr>
+
+<!-- KEEP ALL YOUR EXISTING ROWS EXACTLY AS THEY ARE -->
+<!-- ONLY CHANGE: add class="score-output" to each score cell -->
+
+</table>
+
+
+
+<!-- PAGE 2 -->
+<div class="page-break"></div>
+
+<!-- PRINT CONTINUATION HEADER -->
+<div class="print-continuation">
+
+  <div class="print-cont-inner">
+
+    <div class="print-cont-logo">
+      <img src="Logo.jpg" alt="Logo">
+    </div>
+
+    <div class="print-cont-title">
+      PAWS - Shelter Quality of Life Tool<br>
+      <span class="header-subtitle">[PAWS-sQOL]</span>
+    </div>
+
+    <div class="print-cont-right">
+
+  <div>ANIMAL NAME</div>
+  <div class="print-copy-field" id="printAnimalName"></div>
+
+  <div style="margin-top:4px;">PAWS ID</div>
+  <div class="print-copy-field" id="printAnimalId"></div>
+
+</div>
+
+  </div>
+
+  <div class="print-cont-sub">
+    [Page 2, Continued]
+  </div>
+
+</div>
+
+<div class="panel-wrap">
+
+<div class="panel">
+<table style="width:100%;">
+
+<tr><th>Raw Score</th><th>Interpretation</th></tr>
+<tr class="band-green"><td>27–32</td>
+	<td>Good Quality of Life</td></tr>
+
+<tr class="band-lightgreen"><td>21–26</td>
+	<td>Acceptable - With Monitoring</td></tr>
+
+<tr class="band-yellow"><td>15–20</td>
+	<td>Concerning – Intervention Required</td></tr>
+
+<tr class="band-darkred"><td>11–14 or ≥2 domains scored "1"</td>
+	<td>Poor – Urgent Multidisciplinary Review</td></tr>
+
+<tr class="band-black"><td>≤10 or any 0</td>
+	<td>Quality of life no longer ethically acceptable</td></tr>
+</table>
+</div>
+
+<div class="panel qol-panel">
+<div class="qol-header">QUALITY OF LIFE ASSESSMENT</div>
+<div id="qolBox" class="qol-box">ASSESSMENT INCOMPLETE</div>
+</div>
+
+<div class="panel">
+<table style="height:100%; width:100%; table-layout:fixed;">
+
+<tr style="height:33%;">
+<th>
+  TOTAL SCORE<br>
+  <span class="sub-label">(Max Score = 32)</span>
+</th>
+<td id="totalScore" class="value-cell">--</td>
+</tr>
+
+<tr style="height:33%;">
+<th>QOL Index</th>
+<td id="qolIndex" class="value-cell">--</td>
+</tr>
+
+<tr style="height:33%;">
+<th>Critical Flags</th>
+<td id="flags" class="value-cell">--</td>
+</tr>
+
+</table>
+</div>
+
+</div>
+
+<!-- ================= HOSPICE SECTION ================= -->
+<div class="hospice-section">
+
+  <!-- TITLE -->
+  <div class="hospice-title">
+    HOSPICE DETERMINATIONS AND ELIGIBILITY
+  </div>
+
+  <!-- DESCRIPTION -->
+  <div class="hospice-desc">
+    PAWS sQOL includes hospice candidacy guidance to ensure that animals with progressive, life-limiting conditions receive comfort-focused care when appropriate, while preventing hospice from being used to prolong suffering. Hospice eligibility is restricted to animals whose pain and distress can be adequately managed and whose quality of life remains above the organization’s ethical minimum threshold.
+  </div>
+
+  <!-- GRID -->
+  <div class="hospice-grid">
+
+    <!-- LEFT TABLE -->
+    <table class="hospice-main">
+
+      <tr class="hospice-section-header">
+        <th colspan="4">HOSPICE MINIMUM ELIGIBILITY CRITERIA</th>
+      </tr>
+
+      <tr class="hospice-sub-header">
+        <th>Core Eligibility Criteria</th>
+        <th>Minimum Requirement</th>
+        <th>Candidate Score</th>
+        <th>Meets Criteria</th>
+      </tr>
+
+      <tr>
+        <td>Quality of Life Score</td>
+        <td>QOL Score ≤20</td>
+        <td id="h_qol"></td>
+        <td id="h_qol_met"></td>
+      </tr>
+
+      <tr>
+        <td>Chronic or progressive disease</td>
+        <td>Medical Status ≤2</td>
+        <td id="h_med"></td>
+        <td id="h_med_met"></td>
+      </tr>
+
+      <tr>
+        <td>Pain can be managed</td>
+        <td>Pain ≥2</td>
+        <td id="h_pain"></td>
+        <td id="h_pain_met"></td>
+      </tr>
+
+      <tr>
+        <td>Comfort can be maintained</td>
+        <td>Environment ≥2</td>
+        <td id="h_env"></td>
+        <td id="h_env_met"></td>
+      </tr>
+
+      <tr>
+        <td>Emotional distress manageable</td>
+        <td>Emotional State ≥2</td>
+        <td id="h_emotional"></td>
+        <td id="h_emotional_met"></td>
+      </tr>
+
+      <tr>
+        <td>Basic needs met with support</td>
+        <td>Appetite ≥2</td>
+        <td id="h_appetite"></td>
+        <td id="h_appetite_met"></td>
+      </tr>
+
+      <tr>
+        <td>Mobility limited, but not suffering</td>
+        <td>Locomotion ≥1</td>
+        <td id="h_mobility"></td>
+        <td id="h_mobility_met"></td>
+      </tr>
+
+      <tr class="hospice-warning">
+        <td colspan="4">** Must Meet ALL Minimum Requirements **</td>
+      </tr>
+
+      <tr>
+  	<td colspan="2"><b>Minimum Requirements Met:</b></td>
+  	<td colspan="2" id="h_overall" class="hospice-response">Assessment Incomplete</td>
+      </tr>
+
+    </table>
+
+    <!-- RIGHT PANEL -->
+    <div class="hospice-right">
+
+      <table class="hospice-band">
+
+  	<colgroup>
+    		<col style="width:30%;">
+    		<col style="width:70%;">
+  	</colgroup>
+
+        <tr><th colspan="2">HOSPICE SCORING BAND</th></tr>
+        
+	<tr class="band-green"><td>≥21</td><td>Hospice Generally Not Indicated</td></tr>
+   	<tr class="band-yellow">
+  <td>15–20</td>
+  <td>
+    Hospice Possible, Depending on Trajectory<br>
+    <span style="font-size:11px;">(Must Meet Criteria)</span>
+  </td>
+</tr>
+	<tr class="band-darkred">
+  <td>11–14</td>
+  <td>
+    Hospice Likely Appropriate<br>
+    <span style="font-size:11px;">(Must Meet Criteria)</span>
+  </td>
+</tr>
+	<tr class="band-black"><td>≤10</td><td>Hospice Not Appropriate</td></tr>
+      </table>
+
+      <div class="hospice-determination">
+        <div class="hospice-det-header">HOSPICE DETERMINATION</div>
+        <div id="hospice_final">ASSESSMENT INCOMPLETE</div>
+      </div>
+
+    </div>
+
+    </div>
+  </div>
+
+  <!-- ================= AI INTERPRETATION ================= -->
+
+  <div class="ai-section">
+
+    <div class="ai-title">
+      Interpretation
+    </div>
+
+    <div id="aiInterpretation" class="ai-box">
+      Assessment incomplete.
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+
+/* ===== EXPORT FUNCTION ===== */
+function exportPDF(){
+  setTimeout(()=>{
+    window.print();
+  }, 100);
+}
+
+/* ===== STATE ===== */
+let scores = new Array(8).fill(null);
+
+/* ===== HEADER FIELD MIRRORING ===== */
+
+const animalNameInput = document.getElementById("animalNameInput");
+const animalIdInput = document.getElementById("animalIdInput");
+
+const printAnimalName = document.getElementById("printAnimalName");
+const printAnimalId = document.getElementById("printAnimalId");
+
+function syncPrintHeader(){
+
+  printAnimalName.innerText = animalNameInput.value;
+  printAnimalId.innerText = animalIdInput.value;
+}
+
+animalNameInput.addEventListener("input", syncPrintHeader);
+animalIdInput.addEventListener("input", syncPrintHeader);
+
+/* ===== CLICK HANDLER ===== */
+document.addEventListener("click", function(e){
+
+  const cell = e.target.closest(".score-cell");
+  if (!cell) return;
+
+  const row = parseInt(cell.dataset.row);
+  const value = parseInt(cell.dataset.value);
+
+  const scoreCell = document.getElementById(`score_${row}`);
+  const isSame = scores[row] === value;
+
+  document.querySelectorAll(`[data-row="${row}"]`)
+    .forEach(c=>c.classList.remove("score-0","score-1","score-2","score-3","score-4"));
+
+  if (isSame) {
+    scores[row] = null;
+    scoreCell.innerText = "";
+    scoreCell.className = "score-output";
+    updateAll();
+    return;
+  }
+
+  cell.classList.add(`score-${value}`);
+  scores[row] = value;
+
+  scoreCell.innerText = value;
+  scoreCell.className = `score-output score-${value}`;
+
+  updateAll();
+});
+
+/* ===== ENGINE ===== */
+function updateHospice(){
+
+  // If incomplete, reset everything
+  if (scores.includes(null)){
+    document.getElementById("h_overall").innerText = "Assessment Incomplete";
+    document.getElementById("h_overall").className = "hospice-response";
+
+    ["h_qol","h_med","h_pain","h_env","h_emotional","h_appetite","h_mobility"].forEach(id=>{
+      document.getElementById(id).innerText = "";
+    });
+
+    ["h_qol_met","h_med_met","h_pain_met","h_env_met","h_emotional_met","h_appetite_met","h_mobility_met"].forEach(id=>{
+      document.getElementById(id).innerText = "";
+      document.getElementById(id).className = "";
+    });
+
+    return;
+  }
+
+}
+
+/* ===== MAIN QOL ENGINE ===== */
+
+function updateAll(){
+
+  if (scores.includes(null)) {
+    document.getElementById("totalScore").innerText = "--";
+    document.getElementById("qolIndex").innerText = "--";
+    document.getElementById("flags").innerText = "--";
+
+    const box = document.getElementById("qolBox");
+    box.innerText = "ASSESSMENT INCOMPLETE";
+    box.style.background = "";
+    box.style.color = "";
+    
+
+   const finalBox = document.getElementById("hospice_final");
+   finalBox.innerText = "ASSESSMENT INCOMPLETE";
+   finalBox.className = "";
+   finalBox.style.background = "";
+   finalBox.style.color = "";
+
+   return;
+  }
+
+
+  const total = scores.reduce((a,b)=>a+b,0);
+
+  // Map scores
+  const map = {
+    qol: total,
+    med: scores[6],
+    pain: scores[0],
+    env: scores[2],
+    emotional: scores[5],
+    appetite: scores[1],
+    mobility: scores[7]
+  };
+
+  // Populate candidate score column
+  document.getElementById("h_qol").innerText = map.qol;
+  document.getElementById("h_med").innerText = map.med;
+  document.getElementById("h_pain").innerText = map.pain;
+  document.getElementById("h_env").innerText = map.env;
+  document.getElementById("h_emotional").innerText = map.emotional;
+  document.getElementById("h_appetite").innerText = map.appetite;
+  document.getElementById("h_mobility").innerText = map.mobility;
+
+  // Criteria logic
+  const results = {
+    qol: map.qol <= 20,
+    med: map.med <= 2,
+    pain: map.pain >= 2,
+    env: map.env >= 2,
+    emotional: map.emotional >= 2,
+    appetite: map.appetite >= 2,
+    mobility: map.mobility >= 1
+  };
+
+/* ===== HOSPICE PASS/FAIL FORMATTER ===== */
+  function setResult(id, pass){
+    const el = document.getElementById(id);
+    el.innerText = pass ? "YES" : "NO";
+    el.className = pass ? "hospice-yes" : "hospice-no";
+  }
+
+  setResult("h_qol_met", results.qol);
+  setResult("h_med_met", results.med);
+  setResult("h_pain_met", results.pain);
+  setResult("h_env_met", results.env);
+  setResult("h_emotional_met", results.emotional);
+  setResult("h_appetite_met", results.appetite);
+  setResult("h_mobility_met", results.mobility);
+
+  // Overall
+const allMet = Object.values(results).every(v => v === true);
+const zeroCount = scores.filter(x => x === 0).length;
+
+const overall = document.getElementById("h_overall");
+const finalBox = document.getElementById("hospice_final");
+
+/* ===== DETERMINE ELIGIBILITY TEXT ===== */
+
+let text = "";
+let cssClass = "";
+
+/* RULE 1 — NOT APPROPRIATE (highest priority) */
+if (total <= 10 || zeroCount > 0 || !allMet){
+  text = "Hospice Not Appropriate";
+  cssClass = "band-black";
+}
+
+/* RULE 2 — GENERALLY NOT INDICATED */
+else if (total >= 21){
+  text = "Hospice Generally Not Indicated";
+  cssClass = "band-green";
+}
+
+/* RULE 3 — POSSIBLE */
+else if (total >= 15 && total <= 20 && allMet){
+  text = "Hospice Possible (Depending on Trajectory)";
+  cssClass = "band-yellow";
+}
+
+/* RULE 4 — LIKELY */
+else if (total >= 11 && total <= 14 && allMet){
+  text = "Hospice Likely Appropriate";
+  cssClass = "band-darkred";
+}
+
+/* ===== APPLY TO FINAL PANEL ===== */
+
+finalBox.innerText = text;
+finalBox.className = ""; // reset
+finalBox.classList.add(cssClass);
+
+/* ===== KEEP YES/NO SUMMARY ===== */
+
+if (allMet){
+  overall.innerText = "YES";
+  overall.className = "hospice-yes";
+} else {
+  overall.innerText = "NO";
+  overall.className = "hospice-no";
+}
+  const oneCount = scores.filter(x=>x===1).length;
+
+  document.getElementById("totalScore").innerText = total;
+  document.getElementById("flags").innerText = scores.filter(x=>x<=1).length;
+
+  const qolIndex = (total - (oneCount*2) - (zeroCount*4)) / 32;
+  document.getElementById("qolIndex").innerText = Math.round(qolIndex*100)+"%";
+
+  let qolText="", bg="", color="black";
+
+  if (oneCount >= 2){
+    qolText="Poor – Urgent Multidisciplinary Review";
+    bg="#9C0006"; color="white";
+  }
+  else if (total >= 27){
+    qolText="Good Quality of Life"; bg="#00B050"; color="white";
+  }
+  else if (total >= 21){
+    qolText="Acceptable - With Monitoring"; bg="#C6EFCE"; color="#006100";
+  }
+  else if (total >= 15){
+    qolText="Concerning – Intervention Required"; bg="#FFEB9C"; color="#000000";
+  }
+  else if (total >= 11){
+    qolText="Poor – Urgent Multidisciplinary Review"; 
+bg="#A00000"; 
+color="#FFFFFF";
+  }
+  else{
+    qolText="Quality of life no longer ethically acceptable"; bg="black"; color="white";
+  }
+
+  const box = document.getElementById("qolBox");
+  box.innerText = qolText;
+ box.innerText = qolText;
+box.style.background = bg;
+box.style.color = color;
+
+
+/* ===== AI-ASSISTED INTERPRETATION ===== */
+
+const dimensionLabels = [
+  "Pain",
+  "Appetite & Hydration",
+  "Welfare Environment",
+  "Social Function & Safety",
+  "Species/Breed-Typical Behavior",
+  "Emotional State",
+  "Overall Medical Status",
+  "Locomotion & Physical Function"
+];
+
+const dimensionInterpretations = [
+  "The animal demonstrates significant unmanaged pain, respiratory compromise, or physical suffering.",
+  "The animal demonstrates compromised appetite, hydration, or nutritional stability.",
+  "The current environment may be contributing to distress, discomfort, or impaired welfare.",
+  "The animal demonstrates social, behavioral, or safety concerns impacting quality of life.",
+  "The animal demonstrates impaired ability to engage in normal species-typical behaviors.",
+  "The animal demonstrates ongoing emotional distress, fear, anxiety, or impaired psychological welfare.",
+  "The animal demonstrates significant medical disease burden or progressive health compromise.",
+  "The animal demonstrates impaired mobility or physical functional capacity."
+];
+
+let concernList = [];
+
+scores.forEach((score, index)=>{
+
+  if (score <= 2){
+
+    concernList.push(
+  "• <u>" +
+  dimensionLabels[index] +
+  "</u>: " +
+  dimensionInterpretations[index]
+);
+  }
+});
+
+let hospiceIssues = [];
+
+if (!results.qol){
+  hospiceIssues.push(
+    "Overall quality of life score exceeds hospice eligibility threshold."
+  );
+}
+
+if (!results.med){
+  hospiceIssues.push(
+    "Medical status does not currently support hospice candidacy."
+  );
+}
+
+if (!results.pain){
+  hospiceIssues.push(
+    "Pain and physical suffering may not be adequately manageable."
+  );
+}
+
+if (!results.env){
+  hospiceIssues.push(
+    "Environmental comfort and welfare needs are not adequately maintained."
+  );
+}
+
+if (!results.emotional){
+  hospiceIssues.push(
+    "Emotional distress remains clinically significant."
+  );
+}
+
+if (!results.appetite){
+  hospiceIssues.push(
+    "Appetite and hydration support needs exceed hospice thresholds."
+  );
+}
+
+if (!results.mobility){
+  hospiceIssues.push(
+    "Mobility impairment exceeds hospice eligibility criteria."
+  );
+}
+
+let pathway = "";
+
+
+/* ===== GOOD QUALITY OF LIFE ===== */
+
+if (total >= 27){
+
+  pathway =
+    "Current findings indicate that the animal maintains a good overall quality of life with no major indicators of ongoing uncompensated suffering. Continued routine care, monitoring, and supportive management remain appropriate at this time.";
+}
+
+
+/* ===== ACCEPTABLE WITH MONITORING ===== */
+
+else if (total >= 21){
+
+  pathway =
+    "Current findings suggest that the animal presently maintains an acceptable quality of life, though emerging areas of concern warrant continued monitoring and supportive intervention. Ongoing care with periodic reassessment remains appropriate.";
+}
+
+
+/* ===== CONCERNING / INTERVENTION NEEDED ===== */
+
+else if (total >= 15){
+
+  pathway =
+    "Current findings identify clinically meaningful welfare concerns requiring active medical, behavioral, and/or environmental intervention. Depending on disease trajectory and response to supportive measures, hospice-focused management may become ethically appropriate.";
+}
+
+
+/* ===== POOR / URGENT REVIEW ===== */
+
+else if (total >= 11){
+
+  pathway =
+    "Current findings indicate substantially compromised welfare with multiple domains demonstrating significant impairment. Intensive supportive intervention, urgent multidisciplinary review, and consideration of hospice-focused management are strongly warranted.";
+}
+
+
+/* ===== ETHICALLY UNACCEPTABLE ===== */
+
+else{
+
+  pathway =
+    "Current findings indicate severe compromise in quality of life with evidence of ongoing suffering that may no longer be ethically manageable. Humane euthanasia should be strongly considered unless rapid and meaningful improvement can realistically be achieved.";
+}
+
+const formattedConcerns = concernList.length
+  ? concernList.join("<br>")
+  : "• No major quality of life concerns identified.";
+
+const formattedHospice = hospiceIssues.length
+  ? hospiceIssues.map(x=>"• " + x).join("<br>")
+  : "• All hospice eligibility criteria are currently met.";
+
+const aiNarrative =
+
+"<div style='margin-bottom:18px;'>" +
+
+  "Clinical Assessment Summary" +
+
+"</div>" +
+
+"<div style='margin-bottom:26px;'>" +
+
+  "Total Quality of Life Score: " +
+  "<strong>" + total + "/32</strong>." +
+
+"</div>" +
+
+"<div style='margin-bottom:10px;'>" +
+
+  "<strong>Primary Areas of Concern:</strong>" +
+
+"</div>" +
+
+"<div style='margin-bottom:26px; line-height:1.45;'>" +
+
+  formattedConcerns +
+
+"</div>" +
+
+"<div style='margin-bottom:10px;'>" +
+
+  "<strong>Hospice Eligibility Assessment:</strong>" +
+
+"</div>" +
+
+"<div style='margin-bottom:26px; line-height:1.45;'>" +
+
+  formattedHospice +
+
+"</div>" +
+
+"<div style='margin-bottom:10px;'>" +
+
+  "<strong>Recommended Humane Pathway:</strong>" +
+
+"</div>" +
+
+"<div style='line-height:1.45;'>" +
+
+  pathway +
+
+"</div>";
+
+document.getElementById("aiInterpretation").innerHTML =
+  aiNarrative;
+
+
+updateHospice();
+
+}
+
+/* ===== RESET TOOL ===== */
+
+function resetAssessment(){
+
+  /* Reset score array */
+  scores = new Array(8).fill(null);
+
+  /* Clear all selected cells */
+  document.querySelectorAll(".score-cell").forEach(cell=>{
+    cell.classList.remove(
+      "score-0",
+      "score-1",
+      "score-2",
+      "score-3",
+      "score-4"
+    );
+  });
+
+  /* Clear score output column */
+  document.querySelectorAll(".score-output").forEach(cell=>{
+    cell.innerText = "";
+    cell.className = "score-output";
+  });
+
+  /* Clear animal info */
+  animalNameInput.value = "";
+  animalIdInput.value = "";
+
+  /* Sync continuation header */
+  syncPrintHeader();
+
+  /* Recalculate/reset everything */
+  updateAll();
+}
+
+</script>
+</body>
+</html>
